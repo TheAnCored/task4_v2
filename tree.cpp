@@ -128,6 +128,22 @@ Cube& Cube::operator=(const Cube& second){
     return *this;
 }
 
+// Check point on location
+bool Cube::IsInside(Point point){
+    
+    int index=0;
+
+    for(int i=0; i<3; i++){
+        if( this->vert_[0][i] < point[i] && point[i] < this->vert_[7][i] ){
+            index++;
+        }
+    }
+
+    if(index == 3){ return true;}
+
+    return false;
+}
+
 // Print cube
 void Cube::print(){
     cout<<"-----------------------\n";
@@ -146,20 +162,26 @@ Node::Node(){
     this->cube_ = Cube();
     this->desc_ = nullptr;
 
+    // this->points_ = nullptr;
+    // this->amount_ = 0;
+
     this->level_ = 1;
-    this->max_level_ = 1;
 }
 
+
 // Constructor with depth node's level, center and edge of the cube
-Node::Node(unsigned int level_, unsigned int max_level_, Point center_, double edge_){
+Node::Node(unsigned int level_, Point center_, double edge_){
 
+    // Создаем куб для звена
     this->cube_ = Cube(center_, edge_);
+
+    // Передаём уровень звену
     this->level_ = level_;
-    this->max_level_ = max_level_;
 
-    this->cube_.print();
+    // this->points_ = nullptr;
+    // this->amount_ = 0;
 
-    if(this->level_ < this->max_level_){ 
+    if(this->level_ < Node::max_level_){ 
 
         this->desc_ = make_unique<Node[]>(8); 
     
@@ -229,10 +251,11 @@ Node::Node(unsigned int level_, unsigned int max_level_, Point center_, double e
                 case 7:
                     tmp = this->cube_.center_;
                     for(int j=0; j<3; j++){ tmp[j] += edge_/4;}
+
                     break;
             }
 
-            this->desc_[i] = Node(this->level_ + 1, max_level_, tmp, edge_/2);
+            this->desc_[i] = Node(this->level_ + 1, tmp, edge_/2);
         }
     }
     else{ this->desc_ = nullptr;}
@@ -244,6 +267,9 @@ Node::Node(const Node& second){
 
     this->desc_ = make_unique<Node[]>(8);
 
+    // this->points_ = second.points_;
+    // this->amount_ = second.amount_;
+
     for(int i=0; i<8; i++){
         this->desc_[i] = second.desc_[i];
     }
@@ -252,8 +278,12 @@ Node::Node(const Node& second){
 // Operator =
 Node& Node::operator=(const Node& second){
     this->cube_ = second.cube_;
+    this->level_ = second.level_;
 
     this->desc_ = make_unique<Node[]>(8);
+
+    // this->points_ = second.points_;
+    // this->amount_ = second.amount_;
     
     if(second.desc_ != nullptr){
         for(int i=0; i<8; i++){
@@ -276,6 +306,26 @@ Node& Node::operator[](int index){
 Node& Node::operator[](int index) const{
     return this->desc_[index];
 }
+
+// Print cube of note
+ void Node::print(){ this->cube_.print(); }
+
+// Print function for subtree for recursion
+void Node::print_subtree(){
+
+    this->print();
+
+    if(this->level_ < Node::max_level_){
+        for(int i=0; i<8; i++){
+            this->desc_[i].print_subtree();
+        }
+    }
+}
+
+void Node::AppPoint(Point point){}
+
+void Node::AppPoint(double x_, double y_, double z_){}
+
 // -----------------------------------------
 
 
@@ -283,17 +333,28 @@ Node& Node::operator[](int index) const{
 // Empty constructor
 Tree::Tree(){
     this->root_ = make_unique<Node>();
+
+    // In Tree class
     this->max_level_ = 1;
+
+    // In Node class
+    Node::max_level_ = 1;
 }
 
 // Constructor with max_level, center of root_cube and its edge
 Tree::Tree(unsigned int max_level_, Point center_, double edge_){
 
-    // For root_cube deph level always 1
-    this->root_ = make_unique<Node>(1,max_level_, center_, edge_);
-
+    // Maximal level of recursion( in Tree class )
     this->max_level_= max_level_;
 
-    this->root_->max_level_ = this->max_level_;
+    // Maximal level of recursion( in Node class )
+    Node::max_level_ = this->max_level_;
+
+    // For root_cube deph level always 1
+    this->root_ = make_unique<Node>(1, center_, edge_);
+}
+
+void Tree::print(){
+    this->root_->print_subtree();
 }
 // -----------------------------------------

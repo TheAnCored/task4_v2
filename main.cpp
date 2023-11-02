@@ -1,15 +1,22 @@
 #include "tree.hpp"
 
+
+// Global area
+unsigned int Node::max_level_ = 0; //
+
 int main(){
 
-    Point a(2.1, 5.2, 3.7);
-    double edge = 3.5;
-
+    Point a(0, 0, 0);
+    double edge = 20;
+    unsigned int levels = 3; 
+   
     Cube A(a, edge);
 
-    A.print();
+    Tree tree(levels , a, edge);
 
-    Tree tree(2, a, 4);
+    //cout<<" Amount of levels is: "<< Node::max_level_<<endl;
+    // For check the tree
+    // tree.print();
 
     return  0;
 }

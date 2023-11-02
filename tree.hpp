@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <limits>
+#include <cmath>
 
 using namespace std;
 
@@ -68,6 +69,10 @@ public:
     // Operator= for copying cubes
     Cube& operator=(const Cube&);
 
+
+    // Check point
+    bool IsInside(Point);
+
     // Print cube
     void print();
 };
@@ -82,16 +87,20 @@ private:
 
     // Depth level
     unsigned int level_;
-
 public:
+    // // Array of points and its amount
+    shared_ptr<Point[]> points_;
+    unsigned int amount_;
+
+
     // General field with maximal level of tree
-    unsigned int max_level_; 
+    static unsigned int max_level_; 
 
     // Empty constructor
     Node();
 
     // Depth level
-    Node(unsigned int, unsigned int, Point, double);
+    Node(unsigned int, Point, double);
 
     // Copying constructor
     Node(const Node&);
@@ -104,11 +113,19 @@ public:
     // For const type
     Node& operator[](int) const;
 
-    void print(){ this->cube_.print(); }
+    // AppPoint is a function that include given point in the tree
+    void AppPoint(Point);
+    void AppPoint(double, double, double);
+
+    // Print functions
+    void print();
+    void print_subtree();
 };
+
 
 class Tree{
 private:
+
     // Root cube
     unique_ptr<Node> root_;
 
@@ -121,4 +138,6 @@ public:
 
     // Constructor with max_level, center of root_cube and its edge
     Tree(unsigned int, Point, double);
+
+    void print();
 };

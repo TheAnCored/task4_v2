@@ -4,7 +4,7 @@
 // ------------------POINT------------------
 // Empty constructor
 Point::Point(){
-    this->coord_ = make_unique<double[]>(3);
+    this->coord_ = std::make_unique<double[]>(3);
 
     for(int i=0; i<3; i++){
         this->coord_[i] = 0.;
@@ -13,7 +13,7 @@ Point::Point(){
 
 // Constructor for <point>(x_, y_, z_)
 Point::Point(double x_, double y_, double z_){
-    this->coord_ = make_unique<double[]>(3);
+    this->coord_ = std::make_unique<double[]>(3);
 
     this->coord_[0] = x_;
     this->coord_[1] = y_;
@@ -23,7 +23,7 @@ Point::Point(double x_, double y_, double z_){
 // Copy constructor
 Point::Point(const Point& second){
 
-    this->coord_ = make_unique<double[]>(3);
+    this->coord_ = std::make_unique<double[]>(3);
 
     for(int i=0; i<3; i++){
         this->coord_[i] = second.coord_[i];
@@ -48,12 +48,33 @@ Point& Point::operator=(const Point& second){
     return *this;
 }
 
+bool Point::operator==(const Point& second){
+    if((this->coord_[0] - second.coord_[0]) < std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[0]),abs(second.coord_[0]))){
+        if((this->coord_[1] - second.coord_[1]) < std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[1]),abs(second.coord_[1]))){
+            if((this->coord_[2] - second.coord_[2]) < std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[2]),abs(second.coord_[2]))){
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 // Print method
 void Point::print(){
     for(int i=0; i<3; i++){
-        if(i==0){ cout<<" ("<< this->coord_[i]<<", "; }
-        else if(i==1){ cout<< this->coord_[i]<<", "; }
-        else{ cout<< coord_[i]<<")\n"<<endl;}
+        if(i==0){ std::cout<<" ("<< this->coord_[i]<<", "; }
+        else if(i==1){ std::cout<< this->coord_[i]<<", "; }
+        else{ std::cout<< coord_[i]<<"), "<< std::endl;}
+    }
+}
+
+void Point::out(FILE *out){
+
+    for(int i=0; i<3; i++){
+        if(i==0){ fprintf(out," %c",'('); fprintf(out, "%.4lf,", this->coord_[i]); }
+        else if(i==1){ fprintf(out, " %.4lf,", this->coord_[i]); }
+        else{ fprintf(out, "%.4lf )\n", this->coord_[i]); }
     }
 }
 // -----------------------------------------
@@ -64,7 +85,7 @@ void Point::print(){
 // Empty constructor
 Cube::Cube(){
     this->center_ = Point(0,0,0);
-    this->vert_ = make_unique<Point[]>(8);
+    this->vert_ = std::make_unique<Point[]>(8);
 
     this->edge_ = 0;
 }
@@ -75,7 +96,7 @@ Cube::Cube(Point center_, double edge_){
     this->center_ = center_;
     this->edge_ = edge_;
 
-    this->vert_ = make_unique<Point[]>(8);
+    this->vert_ = std::make_unique<Point[]>(8);
 
     this->vert_[0] = center_;
     this->vert_[7] = center_;
@@ -96,7 +117,7 @@ Cube::Cube(Point center_, double edge_){
 
 // Copy constructor
 Cube::Cube(Cube& second){
-    this->vert_ = make_unique<Point[]>(8);
+    this->vert_ = std::make_unique<Point[]>(8);
     this->edge_ = second.edge_;
     this->center_ = second.center_;
 
@@ -119,7 +140,7 @@ Cube& Cube::operator=(const Cube& second){
     this->center_ = second.center_;
     this->edge_ = second.edge_;
 
-    this->vert_ = make_unique<Point[]>(8);
+    this->vert_ = std::make_unique<Point[]>(8);
 
     for(int i=0; i<8; i++){
         this->vert_[i] = second[i];
@@ -134,7 +155,7 @@ bool Cube::IsInside(Point point){
     int index=0;
 
     for(int i=0; i<3; i++){
-        if( this->vert_[0][i] < point[i] && point[i] < this->vert_[7][i] ){
+        if( this->vert_[0][i] <= point[i] && point[i] <= this->vert_[7][i] ){
             index++;
         }
     }
@@ -146,11 +167,20 @@ bool Cube::IsInside(Point point){
 
 // Print cube
 void Cube::print(){
-    cout<<"-----------------------\n";
+    std::cout<<"-----------------------\n";
     for(int i=0; i<8; i++){
         this->vert_[i].print();
     }
-    cout<<"-----------------------\n";
+    std::cout<<"\n-----------------------\n";
+}
+
+void Cube::out(FILE* out){
+    
+    fprintf(out, "%c",'\n');
+    for(int i=0; i<8; i++){
+        this->vert_[i].out(out);
+    }
+    fprintf(out, "%c",'\n');
 }
 
 // -----------------------------------------
@@ -162,12 +192,11 @@ Node::Node(){
     this->cube_ = Cube();
     this->desc_ = nullptr;
 
-    // this->points_ = nullptr;
-    // this->amount_ = 0;
+    this->points_ = nullptr;
+    this->amount_ = 0;
 
     this->level_ = 1;
 }
-
 
 // Constructor with depth node's level, center and edge of the cube
 Node::Node(unsigned int level_, Point center_, double edge_){
@@ -178,12 +207,12 @@ Node::Node(unsigned int level_, Point center_, double edge_){
     // Передаём уровень звену
     this->level_ = level_;
 
-    // this->points_ = nullptr;
-    // this->amount_ = 0;
+    this->points_ = nullptr;
+    this->amount_ = 0;
 
     if(this->level_ < Node::max_level_){ 
 
-        this->desc_ = make_unique<Node[]>(8); 
+        this->desc_ = std::make_unique<Node[]>(8); 
     
         for(int i=0; i<8; i++){
             Point tmp;
@@ -264,11 +293,14 @@ Node::Node(unsigned int level_, Point center_, double edge_){
 // Copying constructor
 Node::Node(const Node& second){
     this->cube_ = second.cube_;
+    this->level_ = second.level_;
 
-    this->desc_ = make_unique<Node[]>(8);
+    this->desc_ = std::make_unique<Node[]>(8);
 
-    // this->points_ = second.points_;
-    // this->amount_ = second.amount_;
+    this->amount_ = second.amount_;
+    for(unsigned int i=0; i<this->amount_; i++){
+        this->desc_[i] = second.desc_[i];
+    }
 
     for(int i=0; i<8; i++){
         this->desc_[i] = second.desc_[i];
@@ -280,10 +312,12 @@ Node& Node::operator=(const Node& second){
     this->cube_ = second.cube_;
     this->level_ = second.level_;
 
-    this->desc_ = make_unique<Node[]>(8);
+    this->desc_ = std::make_unique<Node[]>(8);
 
-    // this->points_ = second.points_;
-    // this->amount_ = second.amount_;
+    this->amount_ = second.amount_;
+    for(unsigned int i=0; i<this->amount_; i++){
+        this->desc_[i] = second.desc_[i];
+    }
     
     if(second.desc_ != nullptr){
         for(int i=0; i<8; i++){
@@ -308,7 +342,7 @@ Node& Node::operator[](int index) const{
 }
 
 // Print cube of note
- void Node::print(){ this->cube_.print(); }
+void Node::print(){ this->cube_.print(); }
 
 // Print function for subtree for recursion
 void Node::print_subtree(){
@@ -321,18 +355,171 @@ void Node::print_subtree(){
         }
     }
 }
+//
+void Node::AppPoint(Point point){
 
-void Node::AppPoint(Point point){}
+    if(this->cube_.IsInside(point)){
 
-void Node::AppPoint(double x_, double y_, double z_){}
+        std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_);
 
+        for(unsigned int i=0; i<this->amount_; i++){
+            tmp[i] = this->points_[i];
+        }
+
+        this->amount_++;
+        this->points_ = std::make_unique<Point[]>(this->amount_);
+
+        for(unsigned int i=0; i < this->amount_; i++){
+            if(i < this->amount_-1){
+                this->points_[i] = tmp[i];
+            }
+            else{
+                this->points_[this->amount_-1] = point;
+            }
+        }
+        
+
+        if(this->level_ < this->max_level_){
+            for(int i=0; i<8; i++){
+                this->desc_[i].AppPoint(point);
+            }
+        }
+    }
+    else{
+        if(this->level_ == 1){
+            std::cout<< "The point outside of the main cube\n";
+        }
+    }
+}
+
+void Node::AppPoint(double x_, double y_, double z_){
+    Point point(x_,y_,z_);
+
+    if(this->cube_.IsInside(point)){
+
+        std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_);
+
+        for(unsigned int i=0; i<this->amount_; i++){
+            tmp[i] = this->points_[i];
+        }
+
+        this->amount_++;
+        this->points_ = std::make_unique<Point[]>(this->amount_);
+
+        for(unsigned int i=0; i < this->amount_; i++){
+            if(i < this->amount_-1){
+                this->points_[i] = tmp[i];
+            }
+            else{
+                this->points_[this->amount_-1] = point;
+            }
+        }
+        
+
+        if(this->level_ < this->max_level_){
+            for(int i=0; i<8; i++){
+                this->desc_[i].AppPoint(point);
+            }
+        }
+    }
+    else{
+        if(this->level_ == 1){
+            std::cout<< "The point outside of the main cube\n";
+        }
+    }
+}
+
+void Node::DeletePoint(Point point){
+
+    for(unsigned int i=0; i < this->amount_; i++){
+        if(point == this->points_[i]){
+
+            if(this->amount_ == 1){
+                this->amount_--;
+                this->points_ = nullptr;
+            }
+            else{
+                std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_-1);
+
+                for(unsigned int j=0; j < this->amount_; j++){
+                    if(j<i){ tmp[j] = this->points_[j]; }
+                    else if(i==j){ continue; }
+                    else{ tmp[j-1] = this->points_[j]; }
+                }
+
+                this->amount_--;
+                i--;
+                this->points_ = move(tmp);
+            }
+
+            if(this->level_ < this->max_level_){
+                for(int i=0; i<8; i++){
+                    this->desc_[i].DeletePoint(point);
+                }
+            }
+        }
+    }
+}
+
+void Node::DeletePoint(double x_, double y_, double z_){
+
+    Point point(x_,y_,z_);
+
+    for(unsigned int i=0; i < this->amount_; i++){
+        if(point == this->points_[i]){
+            
+            if(this->amount_ == 1){
+                this->amount_--;
+                this->points_ = nullptr;
+            }
+            else{
+                std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_-1);
+
+                for(unsigned int j=0; j < this->amount_; j++){
+                    if(j<i){ tmp[j] = this->points_[j]; }
+                    else if(i==j){ continue; }
+                    else{ tmp[j-1] = this->points_[j]; }
+                }
+
+                this->amount_--;
+                i--;
+                this->points_ = move(tmp);
+            }
+
+            if(this->level_ < this->max_level_){
+                for(int i=0; i<8; i++){
+                    this->desc_[i].DeletePoint(point);
+                }
+            }
+        }        
+    }
+}
+
+void Node::out(FILE* out){
+    
+    this->cube_.out(out);
+
+    if(this->level_ < this->max_level_){
+        for(int i=0; i<8; i++){
+            this->desc_[i].out(out);
+        }
+    }
+
+    if(this->level_ == 1){
+        fprintf(out, " POINTS IN MAIN CUBE: \n");
+
+        for(unsigned int i=0; i<this->amount_; i++){
+            this->points_[i].out(out);
+        }
+    }
+}
 // -----------------------------------------
 
 
 // ------------------TREE-------------------
 // Empty constructor
 Tree::Tree(){
-    this->root_ = make_unique<Node>();
+    this->root_ = std::make_unique<Node>();
 
     // In Tree class
     this->max_level_ = 1;
@@ -351,10 +538,14 @@ Tree::Tree(unsigned int max_level_, Point center_, double edge_){
     Node::max_level_ = this->max_level_;
 
     // For root_cube deph level always 1
-    this->root_ = make_unique<Node>(1, center_, edge_);
+    this->root_ = std::make_unique<Node>(1, center_, edge_);
 }
 
 void Tree::print(){
     this->root_->print_subtree();
+}
+
+void Tree::out(FILE *out){
+    this->root_->out(out);
 }
 // -----------------------------------------

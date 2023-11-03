@@ -2,15 +2,14 @@
 #include <memory>
 #include <limits>
 #include <cmath>
-
-using namespace std;
+#include <stdio.h>
 
 // Space have size is 3
 // Points in R3
 class Point{
 private:
     // Coordinates of one point
-    unique_ptr<double[]> coord_;
+    std::unique_ptr<double[]> coord_;
 
 public:
     // Empty constructor
@@ -31,14 +30,19 @@ public:
     // Operator= for use <point1> = <point2>
     Point& operator=( const Point& );
 
+    // Operator ==
+    bool operator==(const Point&);
+
     void print();
+
+    void out(FILE*);
 };
 
 // Cubes in R3
 class Cube{
 private:
     // The array of the vertexes of the cube
-    unique_ptr<Point[]> vert_;
+    std::unique_ptr<Point[]> vert_;
 
 public:
     // The edge of the cube
@@ -47,11 +51,12 @@ public:
     // The center of the cube( it is the intersection point of the diagonal of the cube)
     Point center_;
 
+
     // Empty constructor
     Cube();
 
     // Constructor with array of its vertexes
-    Cube(unique_ptr<Point[]>);
+    Cube(std::unique_ptr<Point[]>);
 
     // COnstructor with central point and edge of cube
     Cube(Point, double);
@@ -75,6 +80,8 @@ public:
 
     // Print cube
     void print();
+
+    void out(FILE*);
 };
 
 class Node{
@@ -83,15 +90,16 @@ private:
     Cube cube_;
 
     // Descendants of this node
-    unique_ptr<Node[]> desc_;
+    std::unique_ptr<Node[]> desc_;
 
     // Depth level
     unsigned int level_;
 public:
     // // Array of points and its amount
-    shared_ptr<Point[]> points_;
-    unsigned int amount_;
+    std::unique_ptr<Point[]> points_;
 
+    // Amount of points in the cube
+    unsigned int amount_;
 
     // General field with maximal level of tree
     static unsigned int max_level_; 
@@ -117,27 +125,39 @@ public:
     void AppPoint(Point);
     void AppPoint(double, double, double);
 
+    // Delete point from arrays
+    void DeletePoint(Point);
+    void DeletePoint(double, double, double);
+
     // Print functions
     void print();
     void print_subtree();
+    
+    void out(FILE*);
 };
 
 
 class Tree{
-private:
+public:
 
     // Root cube
-    unique_ptr<Node> root_;
+    std::unique_ptr<Node> root_;
 
     // Maximal amount of levels
     unsigned int max_level_;
 
-public:
     // Empty constructor
     Tree();
 
     // Constructor with max_level, center of root_cube and its edge
     Tree(unsigned int, Point, double);
 
+    void AppPoint(Point point){ this->root_->AppPoint(point);}
+    void AppPoint(double x, double y, double z){ this->root_->AppPoint(x,y,z);}
+
+    void DeletePoint(Point point){ this->root_->DeletePoint(point);}
+    void DeletePoint(double x, double y, double z){ this->root_->DeletePoint(x,y,z);}
+
     void print();
+    void out(FILE*);
 };

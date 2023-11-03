@@ -49,14 +49,16 @@ Point& Point::operator=(const Point& second){
 }
 
 bool Point::operator==(const Point& second){
-    if((this->coord_[0] - second.coord_[0]) < std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[0]),abs(second.coord_[0]))){
-        if((this->coord_[1] - second.coord_[1]) < std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[1]),abs(second.coord_[1]))){
-            if((this->coord_[2] - second.coord_[2]) < std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[2]),abs(second.coord_[2]))){
-                return true;
-            }
+    int index = 0;
+
+    for(unsigned int i=0; i<3; i++){
+        if(abs(this->coord_[i] - second.coord_[i]) < 
+        std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[i]), abs(second.coord_[i]))){
+            index++;
         }
     }
 
+    if(index == 3){ return true; }
     return false;
 }
 
@@ -72,9 +74,9 @@ void Point::print(){
 void Point::out(FILE *out){
 
     for(int i=0; i<3; i++){
-        if(i==0){ fprintf(out," %c",'('); fprintf(out, "%.4lf,", this->coord_[i]); }
+        if(i==0){ fprintf(out," %c",'('); fprintf(out, " %.4lf,", this->coord_[i]); }
         else if(i==1){ fprintf(out, " %.4lf,", this->coord_[i]); }
-        else{ fprintf(out, "%.4lf )\n", this->coord_[i]); }
+        else{ fprintf(out, " %.4lf )\n", this->coord_[i]); }
     }
 }
 // -----------------------------------------
@@ -155,7 +157,15 @@ bool Cube::IsInside(Point point){
     int index=0;
 
     for(int i=0; i<3; i++){
-        if( this->vert_[0][i] <= point[i] && point[i] <= this->vert_[7][i] ){
+
+        if( this->vert_[0][i] < point[i] && point[i] < this->vert_[7][i] ){
+            index++;
+        }
+        else if( abs(this->vert_[0][i] - point[i]) <= 
+        std::numeric_limits<double>::epsilon()*std::max(abs(this->vert_[0][i]), abs(point[i]))){
+            index++;
+        }
+        else if(this->vert_[0] == point || this->vert_[7] == point){
             index++;
         }
     }
@@ -358,27 +368,23 @@ void Node::print_subtree(){
 //
 void Node::AppPoint(Point point){
 
+    for(int i=0; i< this->amount_; i++){
+        if(this->points_[i] == point && this->level_ == 1){return;}
+    }
+
     if(this->cube_.IsInside(point)){
 
-        std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_);
+        std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_+1);
 
-        for(unsigned int i=0; i<this->amount_; i++){
+        for(unsigned int i=0; i < this->amount_; i++){
             tmp[i] = this->points_[i];
         }
 
+        tmp[this->amount_] = point;
+
         this->amount_++;
-        this->points_ = std::make_unique<Point[]>(this->amount_);
-
-        for(unsigned int i=0; i < this->amount_; i++){
-            if(i < this->amount_-1){
-                this->points_[i] = tmp[i];
-            }
-            else{
-                this->points_[this->amount_-1] = point;
-            }
-        }
+        this->points_ = move(tmp);
         
-
         if(this->level_ < this->max_level_){
             for(int i=0; i<8; i++){
                 this->desc_[i].AppPoint(point);
@@ -395,25 +401,22 @@ void Node::AppPoint(Point point){
 void Node::AppPoint(double x_, double y_, double z_){
     Point point(x_,y_,z_);
 
+    for(int i=0; i< this->amount_; i++){
+        if(this->points_[i] == point && this->level_ == 1){return;}
+    }
+
     if(this->cube_.IsInside(point)){
+    
+        std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_+1);
 
-        std::unique_ptr<Point[]> tmp = std::make_unique<Point[]>(this->amount_);
-
-        for(unsigned int i=0; i<this->amount_; i++){
+        for(unsigned int i=0; i < this->amount_; i++){
             tmp[i] = this->points_[i];
         }
 
-        this->amount_++;
-        this->points_ = std::make_unique<Point[]>(this->amount_);
+        tmp[this->amount_] = point;
 
-        for(unsigned int i=0; i < this->amount_; i++){
-            if(i < this->amount_-1){
-                this->points_[i] = tmp[i];
-            }
-            else{
-                this->points_[this->amount_-1] = point;
-            }
-        }
+        this->amount_++;
+        this->points_ = move(tmp);
         
 
         if(this->level_ < this->max_level_){
@@ -435,7 +438,7 @@ void Node::DeletePoint(Point point){
         if(point == this->points_[i]){
 
             if(this->amount_ == 1){
-                this->amount_--;
+                this->amount_ = 0;
                 this->points_ = nullptr;
             }
             else{
@@ -448,7 +451,6 @@ void Node::DeletePoint(Point point){
                 }
 
                 this->amount_--;
-                i--;
                 this->points_ = move(tmp);
             }
 
@@ -482,7 +484,6 @@ void Node::DeletePoint(double x_, double y_, double z_){
                 }
 
                 this->amount_--;
-                i--;
                 this->points_ = move(tmp);
             }
 
@@ -508,7 +509,9 @@ void Node::out(FILE* out){
     if(this->level_ == 1){
         fprintf(out, " POINTS IN MAIN CUBE: \n");
 
-        for(unsigned int i=0; i<this->amount_; i++){
+        std::cout<< this->amount_<< std::endl;
+
+        for(unsigned int i=0; i < this->amount_; i++){
             this->points_[i].out(out);
         }
     }

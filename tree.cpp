@@ -52,8 +52,8 @@ bool Point::operator==(const Point& second){
     int index = 0;
 
     for(unsigned int i=0; i<3; i++){
-        if(abs(this->coord_[i] - second.coord_[i]) < 
-        std::numeric_limits<double>::epsilon()*std::max(abs(this->coord_[i]), abs(second.coord_[i]))){
+        if(std::abs(this->coord_[i] - second.coord_[i]) < 
+        std::numeric_limits<double>::epsilon()*std::max(std::abs(this->coord_[i]), std::abs(second.coord_[i]))){
             index++;
         }
     }
@@ -161,11 +161,8 @@ bool Cube::IsInside(Point point){
         if( this->vert_[0][i] < point[i] && point[i] < this->vert_[7][i] ){
             index++;
         }
-        else if( abs(this->vert_[0][i] - point[i]) <= 
-        std::numeric_limits<double>::epsilon()*std::max(abs(this->vert_[0][i]), abs(point[i]))){
-            index++;
-        }
         else if(this->vert_[0] == point || this->vert_[7] == point){
+            
             index++;
         }
     }

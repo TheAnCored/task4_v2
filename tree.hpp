@@ -7,11 +7,10 @@
 // Space have size is 3
 // Points in R3
 class Point{
-private:
+public:
     // Coordinates of one point
     std::unique_ptr<double[]> coord_;
 
-public:
     // Empty constructor
     Point();
 

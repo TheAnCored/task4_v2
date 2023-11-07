@@ -67,7 +67,7 @@ void Point::print(){
     for(int i=0; i<3; i++){
         if(i==0){ std::cout<<" ("<< this->coord_[i]<<", "; }
         else if(i==1){ std::cout<< this->coord_[i]<<", "; }
-        else{ std::cout<< coord_[i]<<"), "<< std::endl;}
+        else{ std::cout<< coord_[i]<<") "<< std::endl;}
     }
 }
 
@@ -365,7 +365,7 @@ void Node::print_subtree(){
 //
 void Node::AppPoint(Point point){
 
-    for(int i=0; i< this->amount_; i++){
+    for(unsigned int i=0; i< this->amount_; i++){
         if(this->points_[i] == point && this->level_ == 1){return;}
     }
 
@@ -398,7 +398,7 @@ void Node::AppPoint(Point point){
 void Node::AppPoint(double x_, double y_, double z_){
     Point point(x_,y_,z_);
 
-    for(int i=0; i< this->amount_; i++){
+    for(unsigned int i=0; i< this->amount_; i++){
         if(this->points_[i] == point && this->level_ == 1){return;}
     }
 
@@ -504,13 +504,18 @@ void Node::out(FILE* out){
     }
 
     if(this->level_ == 1){
-        fprintf(out, " POINTS IN MAIN CUBE: \n");
-
-        std::cout<< this->amount_<< std::endl;
+        //fprintf(out, " POINTS IN MAIN CUBE: \n");
 
         for(unsigned int i=0; i < this->amount_; i++){
             this->points_[i].out(out);
         }
+    }else if(this->amount_ > 0){
+        //fprintf(out, "----- POINTS IN CUBE ----- \n");
+
+        for(unsigned int i=0; i < this->amount_; i++){
+            this->points_[i].out(out);
+        }
+        //fprintf(out, "-------------------------- \n");
     }
 }
 // -----------------------------------------
